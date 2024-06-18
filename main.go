@@ -3,11 +3,21 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
-	"golang.org/x/sync/errgroup"
 	"io"
 	"os"
 	"strconv"
 	"strings"
+	"sync"
+
+	"golang.org/x/sync/errgroup"
+)
+
+const (
+	Route1 string = "route-1.kml"
+	Route2 string = "route-2.kml"
+	Route3 string = "route-3.kml"
+	Route4 string = "route-4.kml"
+	Route5 string = "route-5.kml"
 )
 
 var dirs = []string{
@@ -41,7 +51,7 @@ type LineString struct {
 	Coordinates string `xml:"coordinates"`
 }
 
-func processKML(filePath string, latLongChan chan<- []float64) error {
+func processKML(filePath, key string, latLongChan chan<- map[string][]float64) error {
 	// Open the KML file
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -89,7 +99,12 @@ func processKML(filePath string, latLongChan chan<- []float64) error {
 					if err != nil {
 						return fmt.Errorf("error parsing longitude %s: %v", lon, err)
 					}
-					latLongChan <- []float64{floatLat, floatLong}
+
+					var data []float64
+					data = append(data, []float64{floatLat, floatLong}...)
+					latLongChan <- map[string][]float64{
+						key: data,
+					}
 				}
 			}
 		}
@@ -99,12 +114,14 @@ func processKML(filePath string, latLongChan chan<- []float64) error {
 
 func main() {
 	var g errgroup.Group
-	latLongChan := make(chan []float64)
+	latLongChan := make(chan map[string][]float64)
+	var mu sync.Mutex
+	var latLongPairs = make(map[string][][]float64)
 
-	for _, dir := range dirs {
-		dir := "./files/" + dir // create new instance for the closure
+	for _, fileName := range dirs {
+		dir := "./files/" + fileName
 		g.Go(func() error {
-			return processKML(dir, latLongChan)
+			return processKML(dir, fileName, latLongChan)
 		})
 	}
 
@@ -116,11 +133,14 @@ func main() {
 		close(latLongChan)
 	}()
 
-	var latLongPairs [][]float64
 	for pair := range latLongChan {
-		latLongPairs = append(latLongPairs, pair)
-		fmt.Printf("Lat: %f, Lon: %f\n", pair[0], pair[1])
+		mu.Lock()
+		if latLongPairs[Route1] == nil {
+			latLongPairs[Route1] = [][]float64{}
+		}
+		latLongPairs[Route1] = append(latLongPairs[Route1], pair[Route1])
+		mu.Unlock()
 	}
 
-	//fmt.Println(latLongPairs)
+	fmt.Println(latLongPairs[Route1])
 }
