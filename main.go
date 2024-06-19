@@ -133,21 +133,14 @@ func main() {
 	}()
 
 	for pair := range latLongChan {
-		switch true {
-		case pair[Route1] != nil:
-			latLongPairs[Route1] = append(latLongPairs[Route1], pair[Route1])
-		case pair[Route2] != nil:
-			latLongPairs[Route2] = append(latLongPairs[Route2], pair[Route2])
-		case pair[Route3] != nil:
-			latLongPairs[Route3] = append(latLongPairs[Route3], pair[Route3])
-		case pair[Route4] != nil:
-			latLongPairs[Route4] = append(latLongPairs[Route4], pair[Route4])
-		case pair[Route5] != nil:
-			latLongPairs[Route5] = append(latLongPairs[Route5], pair[Route5])
-		default:
-			fmt.Println("Warning processing KML files : there is lat long not belongs to any kml file")
+		for k, v := range pair {
+			switch k {
+			case Route1, Route2, Route3, Route4, Route5:
+				latLongPairs[k] = append(latLongPairs[k], v)
+			default:
+				fmt.Println("Warning processing KML files : there is lat long not belongs to any kml file")
+			}
 		}
-
 	}
 
 	fmt.Println(len(latLongPairs[Route1]), len(latLongPairs[Route2]), len(latLongPairs[Route3]), len(latLongPairs[Route4]), len(latLongPairs[Route5]))
