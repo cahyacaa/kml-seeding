@@ -7,7 +7,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -116,7 +115,6 @@ func processKML(filePath, key string, latLongChan chan<- map[string][]float64) e
 func main() {
 	var g errgroup.Group
 	latLongChan := make(chan map[string][]float64)
-	var mu sync.Mutex
 	var latLongPairs = make(map[string][][]float64)
 
 	for _, fileName := range dirs {
@@ -135,7 +133,6 @@ func main() {
 	}()
 
 	for pair := range latLongChan {
-		mu.Lock()
 		switch true {
 		case pair[Route1] != nil:
 			latLongPairs[Route1] = append(latLongPairs[Route1], pair[Route1])
@@ -147,8 +144,10 @@ func main() {
 			latLongPairs[Route4] = append(latLongPairs[Route4], pair[Route4])
 		case pair[Route5] != nil:
 			latLongPairs[Route5] = append(latLongPairs[Route5], pair[Route5])
+		default:
+			fmt.Println("Warning processing KML files : there is lat long not belongs to any kml file")
 		}
-		mu.Unlock()
+
 	}
 
 	fmt.Println(len(latLongPairs[Route1]), len(latLongPairs[Route2]), len(latLongPairs[Route3]), len(latLongPairs[Route4]), len(latLongPairs[Route5]))
