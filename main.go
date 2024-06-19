@@ -135,12 +135,20 @@ func main() {
 
 	for pair := range latLongChan {
 		mu.Lock()
-		if latLongPairs[Route1] == nil {
-			latLongPairs[Route1] = [][]float64{}
+		switch true {
+		case pair[Route1] != nil:
+			latLongPairs[Route1] = append(latLongPairs[Route1], pair[Route1])
+		case pair[Route2] != nil:
+			latLongPairs[Route2] = append(latLongPairs[Route2], pair[Route2])
+		case pair[Route3] != nil:
+			latLongPairs[Route3] = append(latLongPairs[Route3], pair[Route3])
+		case pair[Route4] != nil:
+			latLongPairs[Route4] = append(latLongPairs[Route4], pair[Route4])
+		case pair[Route5] != nil:
+			latLongPairs[Route5] = append(latLongPairs[Route5], pair[Route5])
 		}
-		latLongPairs[Route1] = append(latLongPairs[Route1], pair[Route1])
 		mu.Unlock()
 	}
 
-	fmt.Println(latLongPairs[Route1])
+	fmt.Println(len(latLongPairs[Route1]), len(latLongPairs[Route2]), len(latLongPairs[Route3]), len(latLongPairs[Route4]), len(latLongPairs[Route5]))
 }
