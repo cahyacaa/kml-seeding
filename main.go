@@ -23,6 +23,7 @@ const (
 var dirs = []string{
 	"route-1.kml",
 	"route-2.kml",
+	"route-3.kml",
 	"route-4.kml",
 	"route-5.kml",
 }
